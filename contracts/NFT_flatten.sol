@@ -1,7 +1,4 @@
-// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
-
-// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 /**
@@ -1359,31 +1356,32 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         uint256 tokenId,
         bytes memory data
     ) private returns (bool) {
-        if (to.isContract()) {
-            try
-                IERC721Receiver(to).onERC721Received(
-                    _msgSender(),
-                    from,
-                    tokenId,
-                    data
-                )
-            returns (bytes4 retval) {
-                return retval == IERC721Receiver.onERC721Received.selector;
-            } catch (bytes memory reason) {
-                if (reason.length == 0) {
-                    revert(
-                        "ERC721: transfer to non ERC721Receiver implementer"
-                    );
-                } else {
-                    /// @solidity memory-safe-assembly
-                    assembly {
-                        revert(add(32, reason), mload(reason))
-                    }
-                }
-            }
-        } else {
-            return true;
-        }
+        // if (to.isContract()) {
+        //     try
+        //         IERC721Receiver(to).onERC721Received(
+        //             _msgSender(),
+        //             from,
+        //             tokenId,
+        //             data
+        //         )
+        //     returns (bytes4 retval) {
+        //         return retval == IERC721Receiver.onERC721Received.selector;
+        //     } catch (bytes memory reason) {
+        //         if (reason.length == 0) {
+        //             revert(
+        //                 "ERC721: transfer to non ERC721Receiver implementer"
+        //             );
+        //         } else {
+        //             /// @solidity memory-safe-assembly
+        //             assembly {
+        //                 revert(add(32, reason), mload(reason))
+        //             }
+        //         }
+        //     }
+        // } else {
+        //     return true;
+        // }
+        return true;
     }
 
     /**
@@ -1693,8 +1691,9 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
 pragma solidity ^0.8.4;
 
 abstract contract IDA {
-    // address public vendorAddress = TA6acAExqj8mmBkhL4MVPbSqUiJsG8mWDE; //vendor
     address public vendorAddress; //vendor
+
+    // address public vendorAddress; //vendor
 
     function distributePayout(
         IERC20 _payoutToken,
@@ -1708,6 +1707,10 @@ abstract contract IDA {
             // test where the other half goes?
         );
     }
+
+    function setVendor(address _address) external {
+        vendorAddress = _address;
+    }
 }
 
 contract NftTrial is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, IDA {
@@ -1716,43 +1719,22 @@ contract NftTrial is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, IDA {
     Counters.Counter private _tokenIdCounter;
     IERC20 public s_token;
 
-    constructor() ERC721("Product", "PD") {
+    constructor() ERC721("Product", "PDT") {
+        safeMint(msg.sender, "uri");
+
         // contract setup ERC20
         // s_token = TGjyneVnLavYQGLD22nVxrSjxPnkPfKLZm;
+        // vendorAddress = TA6acAExqj8mmBkhL4MVPbSqUiJsG8mWDE;
     }
 
-    //function TRON -
-    // function() external payable {}
-
-    // function transferTokenTest(
-    //     address payable toAddress,
-    //     uint256 tokenValue,
-    //     trcToken id
-    // ) public payable {
-    //     toAddress.transferToken(tokenValue, id);
-    // }
-
-    // function msgTokenValueAndTokenIdTest()
-    //     public
-    //     payable
-    //     returns (trcToken, uint256)
-    // {
-    //     trcToken id = msg.tokenid;
-    //     uint256 value = msg.tokenvalue;
-    //     return (id, value);
-    // }
-
-    // function getTokenBalanceTest(address accountAddress)
-    //     public
-    //     payable
-    //     returns (uint256)
-    // {
-    //     trcToken id = 1000001;
-    //     return accountAddress.tokenBalance(id);
-    // }
+    function setTokenS(IERC20 _address) external {
+        s_token = _address;
+    }
 
     // mintProduct without price?
     function mintProductPay() external {
+        // need approval to this contract first for transferFrom
+
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
@@ -1782,7 +1764,8 @@ contract NftTrial is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, IDA {
         _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
 
-        s_token.transfer(msg.sender, 2222 ether);
+        // fail because of TRANSFER?
+        s_token.transfer(msg.sender, 2222000000000000000000);
     }
 
     function createAccountMint() external {
@@ -1794,12 +1777,12 @@ contract NftTrial is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, IDA {
         // s_token.mint(msg.sender, 2222 ether);
     }
 
-    // function safeMint(address to, string memory uri) public onlyOwner {
-    //     uint256 tokenId = _tokenIdCounter.current();
-    //     _tokenIdCounter.increment();
-    //     _safeMint(to, tokenId);
-    //     _setTokenURI(tokenId, uri);
-    // }
+    function safeMint(address to, string memory uri) public onlyOwner {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
+    }
 
     function withdrawToken(address _tokenContract, uint256 _amount) external {
         IERC20 tokenContract = IERC20(_tokenContract);
