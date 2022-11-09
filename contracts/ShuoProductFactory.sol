@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -15,6 +16,7 @@ contract ShuoNFTProduct is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdCounter;
+    // for payment?
     IERC20 public s_token;
     // Store Contract
     address public s_storeAddress;
@@ -33,7 +35,7 @@ contract ShuoNFTProduct is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     // ------------------------------------------
 
     constructor() ERC721("Shuo Product", "SP") {
-        safeMint(msg.sender, "uri");
+        // safeMint(msg.sender, "uri");
     }
 
     // ------ MODIFIER
@@ -70,14 +72,20 @@ contract ShuoNFTProduct is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         emit CollectionCreated(_productId, _metadataUri, _category);
     }
 
+    // tokenID and productID are different, need to change into 1155 later
     function mint(address _to, uint256 _productId) external onlyStore {
         Product memory product = s_productCollections[_productId];
         if (product.productId == 0) {
             revert ProductCollectionNotFound();
         }
-        s_productCollections[_tokenIdCounter] = product;
-        _safeMint(_to, _tokenIdCounter);
-        _tokenIdCounter++;
+
+
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        s_productCollections[tokenId] = product;
+        _safeMint(_to, tokenId);
+        _setTokenURI(tokenId, product.metadataUri);
+
     }
 
     // ------ PUBLIC FUNCTIONS
@@ -91,21 +99,41 @@ contract ShuoNFTProduct is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         Product[] memory products = new Product[](balance);
         for (uint256 i = 0; i < balance; i += 1) {
             uint256 tokenId = tokenOfOwnerByIndex(_owner, i);
-            Product memory product = tokenProductCollection[tokenId];
+            Product memory product = s_tokenProductCollection[tokenId];
             products[i] = product;
         }
         return products;
     }
 
+    // ------------------------------------------
+    // The following functions are overrides required by Solidity.
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
+        internal
+        override(ERC721, ERC721Enumerable)
+    {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
     function tokenURI(uint256 tokenId)
         public
         view
-        override
+        override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        Product memory product = s_productCollections[tokenId];
-        return product.metadataUri;
+        return super.tokenURI(tokenId);
     }
 
-    // ------------------------------------------
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
 }
