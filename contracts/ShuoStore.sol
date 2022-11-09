@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
-
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 interface IProductFactory {
     function mint(address to, uint256 productId) external;
 
-    function mint(address to) external;
+    function balanceOf(address owner) external view returns (uint256 balance);
 
     function createCollection(
         uint256 productId,
@@ -61,10 +61,11 @@ contract ShuoStore is Ownable {
     // ------ OWNER
     function listingProduct(
         uint256 _productId,
-        address _nftAddress,
+        uint256 _price,
+        uint256 _socialPoints,
         string memory _uri,
         string memory _category,
-        uint256 _socialPoints
+        address _nftAddress
     ) external onlyOwner {
         if(_productId != s_subscriptionProductID){
             IProductFactory(_nftAddress).createCollection(
@@ -73,12 +74,12 @@ contract ShuoStore is Ownable {
                 _category
             );
         }
-        s_storeItems[_productId] = s_storeItems(
-            _nftAddress,
+        s_storeItems[_productId] = StoreItem(
             _price,
+            _socialPoints,
             _uri,
             _category,
-            _socialPoints
+            _nftAddress
         );
         s_products.push(_productId);
         s_productArrayIndexes[_productId] = s_products.length - 1;
@@ -125,11 +126,14 @@ contract ShuoStore is Ownable {
 
         // mint product & subscription
         if (_productId != s_subscriptionProductID) {
-            IProductFactory(item.nftAddress).mint(msg.sender, _productId);
-              // if first time, give SUBS-NFT : hack-thon demo feature
+            // if first time, give SUBS-NFT : hack-thon demo feature
             if(IProductFactory(item.nftAddress).balanceOf(msg.sender) == 0) {
+                // todo: boundary not duplicate?
+                // ISubscriptionNFT(item.nftAddress).balanceOf(msg.sender) == 0
                 ISubscriptionNFT(item.nftAddress).mint(msg.sender);
             }
+
+            IProductFactory(item.nftAddress).mint(msg.sender, _productId);
         } else {
             // mint subscription
             // address of SUBSCRIPTION NFT
