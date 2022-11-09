@@ -16,6 +16,9 @@ interface IProductFactory {
         string memory category
     ) external;
 }
+interface ISubscriptionNFT {
+    function mint(address to) external;
+}
 
 
 error ErrorPricing(address nftAddress, uint256 price);
@@ -51,6 +54,7 @@ contract ShuoStore is Ownable {
         // s_subscriptionProductID =
         // s_tokenPayment = 
         // s_fakeUSD =
+        // s_subscriptionNF =
     }
 
 
@@ -113,20 +117,25 @@ contract ShuoStore is Ownable {
             revert ErrorPricing(item.nftAddress, item.price);
         }
 
-        // hackthon => airdrop fakeUSD
+        // hack-thon => airdrop fakeUSD
         // s_fakeUSD.transfer
 
         // distribute to parents
         // distributeParents()
 
-        // mint product
+        // mint product & subscription
         if (_productId != s_subscriptionProductID) {
             IProductFactory(item.nftAddress).mint(msg.sender, _productId);
+              // if first time, give SUBS-NFT : hack-thon demo feature
+            if(IProductFactory(item.nftAddress).balanceOf(msg.sender) == 0) {
+                ISubscriptionNFT(item.nftAddress).mint(msg.sender);
+            }
         } else {
             // mint subscription
-            IProductFactory(item.nftAddress).mint(msg.sender);
+            // address of SUBSCRIPTION NFT
+            ISubscriptionNFT(item.nftAddress).mint(msg.sender);
         }
-
+      
         emit ItemBought(msg.sender, item.nftAddress, item.price);
     }
 
@@ -153,13 +162,14 @@ contract ShuoStore is Ownable {
 
 // interface GC, Product, Social, Subscription
 
-// deploy marketplace
+// deploy store
 // setup contract -> ProductFactory, SocialPoints, Subscription
 
 // setup vendorAddress
 // setup s_subscriptionProductID
 
 // PRODUCTS
+// - set subscription product -> with subscriptionNFT address
 // LOOT_BOX
 
 // PRODUCTS_NFT -> MINT GIFTCODES
