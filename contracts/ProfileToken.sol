@@ -19,7 +19,7 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
 
     mapping(uint256 => uint256) public s_tokenPositions;
     mapping(address => address) public s_childsParent;
-    mapping(address => address[]) public s_childsParent;
+    mapping(address => address[]) public s_parentsChild;
 
     address public s_signerWL;
     string public s_baseURI;
@@ -35,23 +35,23 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         _;
     }
     // ------ OWNER
-    //   function setPosition(uint256 _position, uint256 _tokenId)
-    //     external
-    //     onlyOwner
-    // {
-    //     s_tokenPositions[_tokenId] = _position;
-    // }
+      function setPosition(uint256 _position, uint256 _tokenId)
+        external
+        onlyOwner
+    {
+        s_tokenPositions[_tokenId] = _position;
+    }
 
-    // function setParent(address _child, address _parent) public onlyOwner {
-    //     s_childsParent[_child] = _parent;
-    // }
+    function setParent(address _child, address _parent) public onlyOwner {
+        s_childsParent[_child] = _parent;
+    }
 
-    // function setChildren(address _parent, address[] memory _children)
-    //     public
-    //     onlyOwner
-    // {
-    //     s_parentsChild[_parent] = _children;
-    // }
+    function setChildren(address _parent, address[] memory _children)
+        public
+        onlyOwner
+    {
+        s_parentsChild[_parent] = _children;
+    }
 
 
     // ------ PUBLIC FUNCTIONS
@@ -78,7 +78,7 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         // TODO: erecover
         // --
         uint256 parentTokenId = tokenOfOwnerByIndex(_addressParent, 0);
-        uint256 parentPosition = tokenPositions[_parentTokenId];
+        uint256 parentPosition = s_tokenPositions[parentTokenId];
         require(parentPosition != 0, "Parent position is zero");
 
         // --> CHECK GIFTCODE CONTRACT
@@ -104,32 +104,24 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         // store address -> validate -> mint
     }
 
-    
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
-    {
-        return super.tokenURI(tokenId);
-    }
+ 
 
     // ------ INTERNAL
      function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
-    ) internal override {
-        super._beforeTokenTransfer(from, to, tokenId);
+    ) internal  {
+        // super._beforeTokenTransfer(from, to, tokenId);
         require(balanceOf(to) == 0, "The target address already has profile token" );
 
-        address _parent = s_childsParent(from);
-        address[] memory _children = s_parentsChild(from);
+        address _parent = s_childsParent[from];
+        address[] memory _children = s_parentsChild[from];
         s_childsParent[to] = _parent;
         s_parentsChild[to] = _children;
 
         // update parent 
-        address[] memory _parentChilds = s_parentsChild(_parent);
+        address[] memory _parentChilds = s_parentsChild[_parent];
 
         for (uint256 i = 0; i < _parentChilds.length; i++) {
             address current = _parentChilds[i];
@@ -144,8 +136,39 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
             s_childsParent[_children[i]] = to;
         }
 
-        delete parentsChild[from];
-        delete childsParent[from];
+        delete s_parentsChild[from];
+        delete s_childsParent[from];
+    }
+
+    // The following functions are overrides required by Solidity.
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
+        internal
+        override(ERC721, ERC721Enumerable)
+    {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 
 }
