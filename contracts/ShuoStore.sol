@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-// interfaces, abstract contract
+//
 interface IProductFactory {
     function mint(address to, uint256 productId) external;
 
@@ -18,13 +18,18 @@ interface IProductFactory {
 }
 interface ISubscriptionNFT {
     function mint(address to) external;
-}
+    function balanceOf(address owner) external view returns (uint256 balance);
 
+}
+interface IProfileToken {
+    function getParent(address _child) external view returns (address);
+}
 
 error ErrorPricing(address nftAddress, uint256 price);
 error BalanceToLow(uint256 buyerBalance);
+error InvalidLength();
 
-// payback
+
 contract ShuoStore is Ownable {
     struct StoreItem {
         uint256 price;
@@ -36,8 +41,16 @@ contract ShuoStore is Ownable {
 
     mapping(uint256 => StoreItem) public s_storeItems;
     mapping(uint256 => uint256) public s_productArrayIndexes;
+
+    uint256 public s_subscriptionProductID = 99;
+    uint256 public s_maxParentTree;
     uint256[] public s_products;
-    uint256 public s_subscriptionProductID;
+    uint256[] public s_payoutPercentage;
+
+    // address
+    ISubscriptionNFT public s_subscriptionsContract;
+    IProfileToken public s_profileContract;
+    address public s_vendorAddress;
     IERC20 public s_tokenPayment;
     IERC20 public s_fakeUSD;
 
@@ -50,15 +63,40 @@ contract ShuoStore is Ownable {
         string category,
         address nftAddress
     );
+    event Distributed(
+        address indexed from,
+        address indexed to,
+        uint256 amount
+    );
     constructor() {
         // s_subscriptionProductID =
         // s_tokenPayment = 
         // s_fakeUSD =
-        // s_subscriptionNF =
+        // s_subscriptionsContract =
+        // s_profileContract =
+        // s_vendorAddress =
     }
 
 
     // ------ OWNER
+    function setSubscriptionAddress(ISubscriptionNFT _address) onlyOwner external{
+        s_subscriptionsContract = _address;
+    }
+    function setProfileTokenAddress(IProfileToken _address) onlyOwner external{
+        s_profileContract = _address;
+    }
+    function setVendorAddress(address _address) onlyOwner external{
+        s_vendorAddress = _address;
+    }
+    function setTokenPayment(IERC20 _address) onlyOwner external{
+        s_tokenPayment = _address;
+    }
+    function setFakeUSD(IERC20 _address) onlyOwner external{
+        s_fakeUSD = _address;
+    }
+
+
+
     function listingProduct(
         uint256 _productId,
         uint256 _price,
@@ -98,6 +136,49 @@ contract ShuoStore is Ownable {
 
     }
 
+    // INTERNAL ---
+     function distributeParents(
+        address _child,
+        uint256 _totalPayment
+    ) internal {
+        address[] memory parentsChain = _getParentsChain(_child);
+        uint256 distributed;
+
+        for (uint256 i = 0; i < s_maxParentTree; i++) {
+            if (parentsChain[i] == address(0)) continue;
+            if (!_isSubscribed(parentsChain[i])) continue;
+
+            uint256 amount = (_totalPayment * (s_payoutPercentage[i])) / 1000;
+
+            s_tokenPayment.transferFrom(_child, parentsChain[i], amount);
+            distributed += amount;
+
+            emit Distributed(_child, parentsChain[i], amount);
+        }
+
+        s_tokenPayment.transferFrom(
+            _child,
+            s_vendorAddress,
+            _totalPayment - distributed
+        );
+    }
+
+    function _isSubscribed(address _user) internal view returns (bool) {
+        return  s_subscriptionsContract.balanceOf(_user) != 0;
+    }
+
+    function _getParentsChain(address _child)
+        internal view
+        returns (address[] memory parentsChain)
+    {
+        parentsChain = new address[](s_maxParentTree);
+        address currentParent = _child;
+        for (uint256 i = 0; i < s_maxParentTree; i++) {
+            currentParent = s_profileContract.getParent(currentParent);
+            parentsChain[i] = currentParent;
+        }
+    }
+
     // ------ PUBLIC
     // MINT SUBSCRIPTION first time on buy product
     // on FE -> check balance -> approve
@@ -130,14 +211,14 @@ contract ShuoStore is Ownable {
             if(IProductFactory(item.nftAddress).balanceOf(msg.sender) == 0) {
                 // todo: boundary not duplicate?
                 // ISubscriptionNFT(item.nftAddress).balanceOf(msg.sender) == 0
-                ISubscriptionNFT(item.nftAddress).mint(msg.sender);
+                s_subscriptionsContract.mint(msg.sender);
             }
 
             IProductFactory(item.nftAddress).mint(msg.sender, _productId);
         } else {
             // mint subscription
             // address of SUBSCRIPTION NFT
-            ISubscriptionNFT(item.nftAddress).mint(msg.sender);
+            s_subscriptionsContract.mint(msg.sender);
         }
       
         emit ItemBought(msg.sender, item.nftAddress, item.price);
@@ -171,6 +252,8 @@ contract ShuoStore is Ownable {
 
 // setup vendorAddress
 // setup s_subscriptionProductID
+// setup subs_contract address
+// setup profile contract address
 
 // PRODUCTS
 // - set subscription product -> with subscriptionNFT address
@@ -179,8 +262,3 @@ contract ShuoStore is Ownable {
 // PRODUCTS_NFT -> MINT GIFTCODES
 // events
 
-
-
-
-
-// -- test why cannot send freeUSD?

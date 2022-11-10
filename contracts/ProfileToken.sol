@@ -104,7 +104,20 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         // store address -> validate -> mint
     }
 
- 
+    function getPosition(uint256 _tokenId) external view returns (uint256) {
+        return s_tokenPositions[_tokenId];
+    }
+
+    function getParent(address _child) public view returns (address) {
+        if (_child == address(0)) {
+            return address(0);
+        }
+        return s_childsParent[_child];
+    }
+
+    function getChilds(address _parent) public view returns (address[] memory) {
+        return s_parentsChild[_parent];
+    }
 
     // ------ INTERNAL
      function _beforeTokenTransfer(
