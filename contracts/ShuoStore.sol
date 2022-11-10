@@ -25,6 +25,10 @@ interface IProfileToken {
     function getParent(address _child) external view returns (address);
 }
 
+interface ISocialPoints {
+    function issuePoints(address to, uint256 points) external;
+}
+
 error ErrorPricing(address nftAddress, uint256 price);
 error BalanceToLow(uint256 buyerBalance);
 error InvalidLength();
@@ -45,11 +49,12 @@ contract ShuoStore is Ownable {
     uint256 public s_subscriptionProductID = 99;
     uint256 public s_maxParentTree;
     uint256[] public s_products;
-    uint256[] public s_payoutPercentage;
+    uint256[] public s_uints;
 
     // address
     ISubscriptionNFT public s_subscriptionsContract;
     IProfileToken public s_profileContract;
+    ISocialPoints public s_socialPoints;
     address public s_vendorAddress;
     IERC20 public s_tokenPayment;
     IERC20 public s_fakeUSD;
@@ -75,6 +80,8 @@ contract ShuoStore is Ownable {
         // s_subscriptionsContract =
         // s_profileContract =
         // s_vendorAddress =
+        // s_maxParentTree
+        // s_uints[]
     }
 
 
@@ -84,6 +91,9 @@ contract ShuoStore is Ownable {
     }
     function setProfileTokenAddress(IProfileToken _address) onlyOwner external{
         s_profileContract = _address;
+    }
+    function setSocialPoints(ISocialPoints _address) onlyOwner external{
+        s_socialPoints = _address;
     }
     function setVendorAddress(address _address) onlyOwner external{
         s_vendorAddress = _address;
@@ -95,6 +105,13 @@ contract ShuoStore is Ownable {
         s_fakeUSD = _address;
     }
 
+  
+    function setDistributionUnits( uint256 _maxTree, uint256[] memory _units) onlyOwner external  {
+        if (_units.length != _maxTree) { revert InvalidLength(); }
+
+        s_maxParentTree = _maxTree;
+        s_uints = _units;
+    }
 
 
     function listingProduct(
@@ -148,7 +165,7 @@ contract ShuoStore is Ownable {
             if (parentsChain[i] == address(0)) continue;
             if (!_isSubscribed(parentsChain[i])) continue;
 
-            uint256 amount = (_totalPayment * (s_payoutPercentage[i])) / 1000;
+            uint256 amount = (_totalPayment * (s_uints[i])) / 1000;
 
             s_tokenPayment.transferFrom(_child, parentsChain[i], amount);
             distributed += amount;
@@ -199,11 +216,9 @@ contract ShuoStore is Ownable {
             revert ErrorPricing(item.nftAddress, item.price);
         }
 
-        // hack-thon => airdrop fakeUSD
-        // s_fakeUSD.transfer
 
         // distribute to parents
-        // distributeParents()
+        distributeParents(msg.sender, item.price);
 
         // mint product & subscription
         if (_productId != s_subscriptionProductID) {
@@ -220,8 +235,18 @@ contract ShuoStore is Ownable {
             // address of SUBSCRIPTION NFT
             s_subscriptionsContract.mint(msg.sender);
         }
+
+        s_socialPoints.issuePoints(msg.sender, item.socialPoints);
       
         emit ItemBought(msg.sender, item.nftAddress, item.price);
+    }
+
+    function testPoints(uint points)external{
+       s_socialPoints.issuePoints(msg.sender, points);
+    }
+
+    function testSubscribe()external{
+        s_subscriptionsContract.mint(msg.sender);
     }
 
 

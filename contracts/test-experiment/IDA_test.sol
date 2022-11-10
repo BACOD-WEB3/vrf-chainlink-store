@@ -39,7 +39,7 @@ interface IERC20 {
      */
     function transfer(address to, uint256 amount) external returns (bool);
 
-    function mint(address to, uint256 amount) external returns (bool);
+    function mint(address to, uint256 amount) external;
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -97,10 +97,13 @@ abstract contract IDA {
     ) internal {
         uint256 amount = (totalPayoutAmount * (100)) / 1000;
 
+        // _payoutToken.approve(vendorAddress, totalPayoutAmount);
+
+        // s_tokenPayment.transferFrom(msg.sender, vendorAddress, _price);
         _payoutToken.transferFrom(
             _child,
             vendorAddress,
-            totalPayoutAmount - amount
+            totalPayoutAmount - amount // 20-2 -> 18
         );
     }
 
@@ -136,8 +139,10 @@ contract IDATesting is IDA {
 
     function mintProduct(uint256 _price, address _child2) external {
         // dangerous behaviour, for hackthon purpose
-        s_tokenPayment.approve(address(this), _price);
+        // s_tokenPayment.approve(address(this), _price);
+        // s_tokenPayment.approve(msg.sender, _price);
 
+        // vendor address ready
         uint256 allowance = s_tokenPayment.allowance(msg.sender, address(this));
         uint256 buyerBalance = s_tokenPayment.balanceOf(msg.sender);
 
@@ -150,7 +155,8 @@ contract IDATesting is IDA {
 
     function mintProduct2(uint256 _price, address _child2) external {
         // dangerous behaviour, for hackthon purpose
-        s_tokenPayment.approve(address(this), _price);
+        // s_tokenPayment.approve(address(this), _price);
+        // s_tokenPayment.approve(msg.sender, _price);
 
         uint256 allowance = s_tokenPayment.allowance(msg.sender, address(this));
         uint256 buyerBalance = s_tokenPayment.balanceOf(msg.sender);

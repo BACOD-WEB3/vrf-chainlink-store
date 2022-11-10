@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // TODO:
 // - PRIVATE s_tokenPositions, s_childsParent, s_childsParent
@@ -23,6 +24,7 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
 
     address public s_signerWL;
     string public s_baseURI;
+    ERC20 public s_fakeUSD;
 
 
     constructor() ERC721("ShuoCIAL Profile", "SHUO") {
@@ -35,10 +37,10 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         _;
     }
     // ------ OWNER
-      function setPosition(uint256 _position, uint256 _tokenId)
-        external
-        onlyOwner
-    {
+    function setFakeUSD(IERC20 _address) onlyOwner external{
+        s_fakeUSD = _address;
+    }
+    function setPosition(uint256 _position, uint256 _tokenId)external onlyOwner {
         s_tokenPositions[_tokenId] = _position;
     }
 
@@ -46,10 +48,7 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         s_childsParent[_child] = _parent;
     }
 
-    function setChildren(address _parent, address[] memory _children)
-        public
-        onlyOwner
-    {
+    function setChildren(address _parent, address[] memory _children) public onlyOwner {
         s_parentsChild[_parent] = _children;
     }
 
@@ -57,12 +56,10 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
     // ------ PUBLIC FUNCTIONS
 
     // mint from whitelist
-    function mintByWL(string memory uri) external onlyOnce
-    {
+    function mintByWL(string memory uri) external onlyOnce {
         // TODO: add ecrecover for wl -> require  / modifier
         // --------
         // for hackthon purpose -> free mint
-
 
         // --------
         uint256 tokenId = _tokenIdCounter.current();
@@ -70,7 +67,9 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, uri);
         s_tokenPositions[tokenId] = 1;
-        // TODO: airdrop fakeUSD
+
+        // hack-thon => airdrop fakeUSD
+        s_fakeUSD.mint(msg.sender, 2000 * 10**18 );
     }
 
     // mint from invitation
@@ -84,7 +83,6 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         // --> CHECK GIFTCODE CONTRACT
         // --> useGiftcode
 
-
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
@@ -95,7 +93,8 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         s_childsParent[msg.sender] = _addressParent;
         s_parentsChild[_addressParent].push(msg.sender);
 
-        // TODO: airdrop fakeUSD
+        // hack-thon => airdrop fakeUSD
+        s_fakeUSD.mint(msg.sender, 500 * 10**18 );
     }
 
     // mint from product
