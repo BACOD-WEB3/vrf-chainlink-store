@@ -1,4 +1,5 @@
 node_modules
+.node_modules
 .env
 coverage
 coverage.json
@@ -11,3 +12,7 @@ artifacts
 yarn.lock
 ./yarn.lock
 .yarn.lock
+
+
+.demo.txt
+demo.txt

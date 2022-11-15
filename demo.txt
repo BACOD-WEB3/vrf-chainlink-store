@@ -1,0 +1,150 @@
+
+1. DEPLOY profile
+2. DEPLOY subscription
+3. DEPLOY points
+4. DEPLOY factory
+5. DEPLOY store
+6. DEPLOY GC ----
+6. DEPLOY fakeUSD
+
+1.profile - setFakeUSD
+
+setStore Points//
+setStore Subs//
+setStore Factory //
+
+//store
+setSubscriptionAddress 
+setProfileTokenAddress
+setSocialPoints
+setTokenPayment
+setFakeUSD
+setVendorAddress
+setDistributionUnits
+
+------------
+listingProduct
+-id
+-price 200
+-social
+-"uri"
+-"category"
+-Factory
+
+------------
+------------change ALICE
+
+-mintByWL   profile
+=expect profileNFT, fakeUSD, 
+
+approve fakeUSD - 200
+purchaseProduct
+=expect factory, subscription, points
+
+-checkVENDOR -> full
+
+------------
+------------change BOB
+
+-mintByCode profile
+=expect profileNFT, fakeUSD
+
+approve fakeUSD - 200
+purchaseProduct
+=expect factory, subscription, points
+=expect ALICE receive 1st array DistributionUnits
+
+
+
+------------
+------------change CHARLIE
+
+0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2
+
+0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db
+
+
+
+
+
+
+
+fakeUSD: TMBLb5jyXxfG3hwBu18j1stEaMJ1YAvNUs
+profile: TTLPofrfvg3xxf6FKmmwmqaZn8UMkqV3hE
+Factory product: TGizrkGndwqTiaaYx8kcLjY67hHo4bQTfU // TAQgGt2JAW3tAGC4DcVV6wHNydyHFQXd8c
+store:  TJVK9mcmMgJVGEKbsYemSSmEz2C16dQ8wa
+points:  TXjb8zXvZpuz4iZEwjDcoCsg2cFqv9C2jy
+subscription: TGRpBpf5mHMAVYZnVynu9vXpiUYvW2SXMW
+
+vendor: TA6acAExqj8mmBkhL4MVPbSqUiJsG8mWDE
+
+
+
+
+https://raw.githubusercontent.com/free-fork/metadata/master/products-sh/subs
+https://raw.githubusercontent.com/free-fork/metadata/master/products-sh/gc-2x
+https://raw.githubusercontent.com/free-fork/metadata/master/products-sh/gc-10x
+https://raw.githubusercontent.com/free-fork/metadata/master/products-sh/mystery-box
+
+
+
+
+0x1b33215c271a0c86ec7b9cdb11ef78dbd243eb55
+0x099961ee210fabdcb620c76a9912c5fed86522e1
+410000000000000000000000000000000000000000
+
+00000000000000000000000079309abcff2cf531070ca9222a1f72c4a5136874 is the first indexed parameter from. 
+The address here is the 20-byte address with the prefix 0x41 removed,
+ so for this parameter, get the last 40 bits of data, and add 41 in front to get the TRON HEX format addres
+
+
+
+
+
+
+
+
+
+
+
+--exclusivity, 
+DISTRIBUTION from our circle, rewards
+
+
+
+
+
+
+
+
+
+
+--USERBASE
+
+--rewards from fluencing
+--rewards from activity
+--rewards [GAMIFICATION]
+
+it's not matter if win but do not continue,
+what matter is strategy, and going grow to compete with existing web2.
+
+and shuocial capable with that
+
+
+------
+
+
+
+
+topic:
+video, explain powerhouse of new WEB3 social.
+
+
+video:
+FAILED winning, funds, 
+i build everything, but i didnt win anything, so i cannot fund team, 
+or 
+
+
+
+gamification-> unique feature
