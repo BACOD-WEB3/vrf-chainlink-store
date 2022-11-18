@@ -16,3 +16,6 @@ yarn.lock
 
 .demo.txt
 demo.txt
+
+.env
+env

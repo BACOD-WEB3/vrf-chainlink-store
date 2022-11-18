@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+//multiple mint// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -8,11 +8,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-error NotStore();
-error ProductCollectionNotFound();
 
-// TODO: change to 1155
-contract ShuoTalk is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
+contract GiftCode is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdCounter;
@@ -20,29 +17,53 @@ contract ShuoTalk is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     IERC20 public s_token;
     // Store Contract
     address public s_storeAddress;
-
-    struct Product {
-        uint256 productId;
-        string metadataUri;
-        string category;
-    }
-
-    mapping(uint256 => Product) public s_productCollections;
-    mapping(uint256 => Product) public s_tokenProductCollection;
-
-    event CollectionCreated(uint256 productId, string uri, string category);
+    address public s_profileAddress;
 
     // ------------------------------------------
 
-    constructor() ERC721("Shuo Talk FEED", "POST") {
+    constructor() ERC721("Gift Code", "GC") {
         // safeMint(msg.sender, "uri");
     }
 
+    // ------ MODIFIER
+    modifier onlyStore() {
+        require(msg.sender == s_storeAddress , "Only store");
+        _;
+    }
+    modifier onlyProfile() {
+        require(msg.sender == s_profileAddress , "Only Profile");
+        _;
+    }
+
     // ------ OWNER
-    // 1.
     function setStoreAddress(address _storeAddress) external onlyOwner {
         s_storeAddress = _storeAddress;
     }
+
+    function airdropGC(address to, uint amount) external onlyStore {
+         // need baseURI?
+        
+        for(uint i = 0; i< amount; i++){
+            uint256 tokenId = _tokenIdCounter.current();
+            _tokenIdCounter.increment();
+            _safeMint(to, tokenId);
+            _setTokenURI(tokenId, "uri");
+        }
+    }
+    function mint(address to, uint mintThrow ) external onlyStore {
+         // need baseURI?
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, "uri");
+    }
+
+    // function useGC(address _address) external onlyProfile {
+
+    // }
+    // function checkGC() returns(bool) {
+
+    // }
 
     function withdrawToken(address _tokenContract, uint256 _amount)
         external
@@ -53,49 +74,7 @@ contract ShuoTalk is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         tokenContract.transfer(msg.sender, _amount);
     }
 
-    // ------ STORE
-    function createCollection(
-        uint256 _productId,
-        string memory _metadataUri,
-        string memory _category
-    ) external onlyStore {
-        Product memory product = Product(_productId, _metadataUri, _category);
-        s_productCollections[_productId] = product;
-        emit CollectionCreated(_productId, _metadataUri, _category);
-    }
-
-    // tokenID and productID are different, need to change into 1155 later
-    function mint(address _to, uint256 _productId) external onlyStore {
-        Product memory product = s_productCollections[_productId];
-        if (product.productId == 0) {
-            revert ProductCollectionNotFound();
-        }
-
-
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        s_productCollections[tokenId] = product;
-        _safeMint(_to, tokenId);
-        _setTokenURI(tokenId, product.metadataUri);
-
-    }
-
     // ------ PUBLIC FUNCTIONS
-
-    function getOwnedProducts(address _owner)
-        external
-        view
-        returns (Product[] memory)
-    {
-        uint256 balance = balanceOf(_owner);
-        Product[] memory products = new Product[](balance);
-        for (uint256 i = 0; i < balance; i += 1) {
-            uint256 tokenId = tokenOfOwnerByIndex(_owner, i);
-            Product memory product = s_tokenProductCollection[tokenId];
-            products[i] = product;
-        }
-        return products;
-    }
 
     // ------------------------------------------
     // The following functions are overrides required by Solidity.

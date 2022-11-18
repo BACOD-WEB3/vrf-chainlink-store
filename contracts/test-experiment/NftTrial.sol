@@ -36,7 +36,7 @@ contract NftTrial is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, IDA {
     }
 
     //function TRON -
-    function() external payable {}
+    // function() external payable {}
 
     function transferTokenTest(
         address payable toAddress,

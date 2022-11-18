@@ -8,13 +8,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+
+
 // TODO:
 // - PRIVATE s_tokenPositions, s_childsParent, s_childsParent
 // - set boundary for transfer token
 // - flexible URI TOKEN ?
 
-// Interface GiftCodes
-contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
+// Interface IGiftCode {
+    // function checkGC();
+    // function useGC();
+// }
+interface IFakeUSD {
+    function mint(address to, uint256 points) external;
+}
+contract BacoProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
@@ -24,7 +32,7 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
 
     address public s_signerWL;
     string public s_baseURI;
-    ERC20 public s_fakeUSD;
+    IFakeUSD public s_fakeUSD;
 
 
     constructor() ERC721("ShuoCIAL Profile", "SHUO") {
@@ -37,7 +45,7 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         _;
     }
     // ------ OWNER
-    function setFakeUSD(IERC20 _address) onlyOwner external{
+    function setFakeUSD(IFakeUSD _address) onlyOwner external{
         s_fakeUSD = _address;
     }
     function setPosition(uint256 _position, uint256 _tokenId)external onlyOwner {
@@ -81,7 +89,10 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
         require(parentPosition != 0, "Parent position is zero");
 
         // --> CHECK GIFTCODE CONTRACT
-        // --> useGiftcode
+        // if(IGiftCode(s_gcAddress).checkGC(gcID)){
+            // --> useGiftcode
+            // IGiftCode(s_gcAddress).useGC(msg.sender);
+        // }
 
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
@@ -184,9 +195,3 @@ contract ShuocialProfile is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable
     }
 
 }
-
-// ----------------
-// deploy, setup tokenPayment, setup vendorAddress (+ setupAddressWLSigner)
-// ----------------
-// 1. user need to approve contract address in fUSD before executing
-// 2.
